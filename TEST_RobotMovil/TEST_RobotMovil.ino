@@ -46,6 +46,20 @@ void Rstop(){
     digitalWrite(IN4, LOW);
   }
 
+int BTread(){
+  int SerialIn=-1;
+  int dataIn;
+  if(Serial2.available() > 0){
+    SerialIn=0;
+     delay(1000);
+     while(Serial2.available() > 0){
+       dataIn = int(Serial2.read());
+       if(dataIn >= 48 && dataIn <= 57) SerialIn = 10*SerialIn + dataIn - 48;
+     }
+  }
+  return SerialIn;
+}
+
 long dist1,dist2;
 
 void setup() {
@@ -65,11 +79,12 @@ void setup() {
   while(!Serial2){
       delay(100);
     }
-   Serial2.println("SERIAL STARTED");
+   Serial.println("SERIAL STARTED");
 }
 
 int SerialIn = 0;
 int dataIn;
+int BTr;
 void loop() {
   dist1 = ping(Trig1,Echo1);
   dist2 = ping(Trig2,Echo2);
@@ -83,7 +98,15 @@ void loop() {
       distStop = SerialIn;
       Serial.println("Max Distance changed to -->  " + String(distStop));
   }
-  Serial.println("BLUETOOTH ----->> Medida 1: " + String(dist1) + "\t\t Medida 2: " + String(dist2));
+
+  BTr=BTread();
+  if (BTr>-1)
+  {
+    distStop=BTr;
+    Serial.println("Max Distance changed to -->  " + String(distStop));
+  }
+  
+  //4Serial.println("BLUETOOTH ----->> Medida 1: " + String(dist1) + "\t\t Medida 2: " + String(dist2));
   Serial2.println(String(dist1) + " " + String(dist2));
 
   if(dist1 < distStop || dist2 < distStop) Rstop();
