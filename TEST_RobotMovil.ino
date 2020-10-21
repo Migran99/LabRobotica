@@ -65,7 +65,7 @@ void setup() {
   while(!Serial2){
       delay(100);
     }
-   Serial2.println("SERIAL STARTED");
+   Serial.println("SERIAL STARTED");
 }
 
 int SerialIn = 0;
@@ -83,6 +83,12 @@ void loop() {
       distStop = SerialIn;
       Serial.println("Max Distance changed to -->  " + String(distStop));
   }
+  if(Serial2.available() > 0){
+      Serial.println("Available Bytes: " +String(Serial2.available()));
+      dataIn = int(Serial2.read());
+      Serial.println("Read from BT: " +String(dataIn));
+
+    }
   Serial.println("BLUETOOTH ----->> Medida 1: " + String(dist1) + "\t\t Medida 2: " + String(dist2));
   Serial2.println(String(dist1) + " " + String(dist2));
 
