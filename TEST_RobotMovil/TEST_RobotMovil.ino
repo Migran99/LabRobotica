@@ -98,6 +98,15 @@ void loop() {
       distStop = SerialIn;
       Serial.println("Max Distance changed to -->  " + String(distStop));
   }
+<<<<<<< HEAD:TEST_RobotMovil.ino
+  if(Serial2.available() > 0){
+      Serial.println("Available Bytes: " +String(Serial2.available()));
+      dataIn = int(Serial2.read());
+      Serial.println("Read from BT: " +String(dataIn));
+
+    }
+  Serial.println("BLUETOOTH ----->> Medida 1: " + String(dist1) + "\t\t Medida 2: " + String(dist2));
+=======
 
   BTr=BTread();
   if (BTr>-1)
@@ -107,6 +116,7 @@ void loop() {
   }
   
   //4Serial.println("BLUETOOTH ----->> Medida 1: " + String(dist1) + "\t\t Medida 2: " + String(dist2));
+>>>>>>> main:TEST_RobotMovil/TEST_RobotMovil.ino
   Serial2.println(String(dist1) + " " + String(dist2));
 
   if(dist1 < distStop || dist2 < distStop) Rstop();
