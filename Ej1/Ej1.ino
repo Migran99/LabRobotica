@@ -19,7 +19,7 @@ const int ENB = 45;
 
 
 
-void moveRobot(int vel1, int vel2, int mode) {
+void moveRobot(int vel1=0, int vel2=0, int mode=0) {
   analogWrite(ENA, vel1);
   analogWrite(ENB, vel2);
   switch (mode) {
@@ -42,8 +42,8 @@ void moveRobot(int vel1, int vel2, int mode) {
       digitalWrite(IN4, HIGH);
       break;
     case 4: //Pivota hacia la izquierda(4)
-      digitalWrite(IN1, HIGH);
-      digitalWrite(IN2, LOW);
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, HIGHgit );
       digitalWrite(IN3, HIGH);
       digitalWrite(IN4, LOW);
       break;
@@ -81,9 +81,20 @@ void setup() {
 }
 
 void loop() {
-  moveRobot(200,200,1);
-
-
-  delay(50);
-
+  moveRobot(200,200,1);//Movemos hacia delante
+  delay(1000);
+  moveRobot();//Paramos
+  delay(3000);//Calibrar si se desvía
+  moveRobot(200,200,2);//Movemos hacia detrás
+  delay(1000); 
+  moveRobot();//Paramos
+  delay(3000);//Ver si acaba en el mismo sitio
+  moveRobot(200,200,3); //Pivota hacia la derecha
+  delay(1000);
+  moveRobot();//Paramos
+  delay(3000);
+  moveRobot(200,200,4); //Pivota hacia la izquierda
+  delay(1000);
+  moveRobot();//Paramos
+  delay(3000);
 }
