@@ -1,4 +1,4 @@
-void moveRobot(int vel1 = 0, int vel2 = 0, int mode = 0) {
+void moveRobot(int vel1, int vel2, int mode) {
   analogWrite(ENA, vel1);
   analogWrite(ENB, vel2);
   switch (mode) {

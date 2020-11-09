@@ -16,6 +16,12 @@ const int IN3 = 4;
 const int IN4 = 5;
 const int ENB = 45;
 
+//MODO DE FUNCIONAMIENTO
+int modo=0;
+
+//Variables de funcionamiento
+bool puttyReady=false;
+int tact, tant; //Tiempo entre ciclos
 
 void setup() {
   pinMode(Trig1, OUTPUT);
@@ -34,28 +40,45 @@ void setup() {
 
   Serial.begin(9600); //Debug
 
-  while (!Serial2) {
-    delay(100);
-  }
-
   Serial.println("SERIAL STARTED"); //Debug
+
+  tact = millis();
+  tant = millis();
 }
 
 void loop() {
-  moveRobot(200, 200, 1); //Movemos hacia delante
-  delay(1000);
-  moveRobot();//Paramos
-  delay(3000);//Calibrar si se desvía
-  moveRobot(200, 200, 2); //Movemos hacia detrás
-  delay(1000);
-  moveRobot();//Paramos
-  delay(3000);//Ver si acaba en el mismo sitio
-  moveRobot(200, 200, 3); //Pivota hacia la derecha
-  delay(1000);
-  moveRobot();//Paramos
-  delay(3000);
-  moveRobot(200, 200, 4); //Pivota hacia la izquierda
-  delay(1000);
-  moveRobot();//Paramos
-  delay(3000);
+  float distStop;
+  float dist1;
+  float dist2;
+  int mode=0,vel1=0,vel2=0;
+  
+  dist1 = ping(Trig1, Echo1);
+  dist2 = ping(Trig2, Echo2);
+
+  if (Serial2.available()>2)
+    BTread(&modo,&distStop);
+      
+  switch (modo)
+  {
+    case 0:
+      mode=0;vel1=0;vel2=0;
+    break;
+    
+    case 1: //MODO1
+      if (dist1 < distStop || dist2 < distStop)
+      {mode=0;vel1=0;vel2=0;}
+      else 
+      {mode=1;vel1=70;vel2=70;}
+    break;
+    
+    case 2:
+    break;
+    
+  }
+
+  moveRobot(vel1,vel2,mode);
+   //Telemetría (Putty)
+  tact = millis();
+  telemetria(tact-tant,dist1,dist2,distStop,mode,vel1,vel2);
+  tant = millis();
 }
