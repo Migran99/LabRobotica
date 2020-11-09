@@ -22,7 +22,7 @@ void moveRobot(int vel1 = 0, int vel2 = 0, int mode = 0) {
       break;
     case 4: //Pivota hacia la izquierda(4)
       digitalWrite(IN1, LOW);
-      digitalWrite(IN2, HIGHgit );
+      digitalWrite(IN2, HIGH);
       digitalWrite(IN3, HIGH);
       digitalWrite(IN4, LOW);
       break;
