@@ -1,4 +1,4 @@
-//Modos de movimiento del robot
+#define PERIODO_MUESTREO_MS     ((unsigned long) 20)  // Periodo de muestreo para control (ms).
 
 //Ultrasonidos
 const int Echo1 = 12;
