@@ -30,8 +30,8 @@ int mode = 0, vel1 = 0, vel2 = 0;
 float maxDistDif = 0.5;
 
 void modo1() {
-  vel1 = 70;
-  vel2 = 70;
+  vel1 = 150;
+  vel2 = 150;
   if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) mode = 0;
   else if (dist1 > distStop || dist2 > distStop) mode = 1;
   else if (dist1 < distStop || dist2 < distStop) mode = 2;
@@ -39,11 +39,11 @@ void modo1() {
 
 void modo2() {
   float distDiff = dist1 - dist2;
-  vel1 = 70;
-  vel2 = 70;
-  if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
-    if (distDiff > maxDistDif / 2)  mode = 3;
-    else if (distDiff < -maxDistDif / 2) mode = 4;
+  vel1 = 100;
+  vel2 = 100;
+ if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
+    if (distDiff > 2*maxDistDif)  mode = 3;
+    else if (distDiff < -2*maxDistDif) mode = 4;
     else mode = 0;
   }
   else if (dist1 > distStop || dist2 > distStop) mode = 1;

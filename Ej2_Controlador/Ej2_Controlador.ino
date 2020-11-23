@@ -26,30 +26,50 @@ float distStop;
 float dist1;
 float dist2;
 int mode = 0, vel1 = 0, vel2 = 0;
-
+int tmAct,tmAnt;
+float tm;
 float maxDistDif = 0.5;
 
 void modo1() {
-  vel1 = 70;
-  vel2 = 70;
+  vel1 = 150;
+  vel2 = 150;
   if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) mode = 0;
   else if (dist1 > distStop || dist2 > distStop) mode = 1;
   else if (dist1 < distStop || dist2 < distStop) mode = 2;
 }
 
 void modo2() {
+  int col1,col2;
+  col1=controlador1(distStop,dist1,tm);
+  col2=controlador2(distStop,dist2,tm);
+  Serial.println("Col1->"+String(col1)+"Col2->"+String(col2)+"tm->"+String(tm));
+  if(col1>1&&col2>1)
+    mode=1;
+  else if (col1<-1&&col2<-1)
+    mode=2;
+  else if (col1>1&&col2<-1)
+    mode=3;
+  else if (col1<-1&&col2>1)
+    mode=4;
+  else
+    mode=0;
+
+  vel1=abs(col1);
+  vel2=abs(col2);
+  /*
   float distDiff = dist1 - dist2;
-  vel1 = 70;
-  vel2 = 70;
-  if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
-    if (distDiff > maxDistDif / 2)  mode = 3;
-    else if (distDiff < -maxDistDif / 2) mode = 4;
+  vel1 = 100;
+  vel2 = 100;
+ if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
+    if (distDiff > 2*maxDistDif)  mode = 3;
+    else if (distDiff < -2*maxDistDif) mode = 4;
     else mode = 0;
   }
   else if (dist1 > distStop || dist2 > distStop) mode = 1;
   else if (dist1 < distStop || dist2 < distStop) mode = 2;
 
   Serial.println("\nMODE 2: Robot Mode-> " + String(mode) +"\t dist1: "+ String(dist1) + "  ;  dist2: " + String(dist2) + "  ;  distDiff:  " + String(distDiff));
+*/
 }
 
 void setup() {
@@ -73,6 +93,8 @@ void setup() {
 
   tact = millis();
   tant = millis();
+  tmAct=millis();
+  tmAnt=millis();
 }
 
 void loop() {
@@ -82,6 +104,10 @@ void loop() {
   if (Serial2.available() > 2)
     BTread(&modo, &distStop);
 
+  tmAct=millis();
+  if ((tmAct-tmAnt)>=PERIODO_MUESTREO_MS)
+  {
+  tm=(tmAct-tmAnt)/1000.0;
   switch (modo)
   {
     case 0:
@@ -96,6 +122,8 @@ void loop() {
       modo2();
       break;
 
+  }
+  tmAnt=millis();
   }
 
   moveRobot(vel1, vel2, mode);

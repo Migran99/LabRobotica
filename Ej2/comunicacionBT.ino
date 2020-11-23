@@ -42,7 +42,7 @@ void BTread(int* modoFuncionamiento, float* distStop) {
   }
 }
 
-void telemetria(int t,int distL, int distR, int ref, int mode, int pwmL, int pwmR){
+void telemetria(int t,float distL, float distR, float ref, int mode, int pwmL, int pwmR){
   if (puttyReady) //Empezamos solo cuando el putty esté listo (Debemos asegurarnos de tener el mismo numero de columnas en todas las filas)
     Serial2.println(String(t) + " " + String(distL) + " " + String(distR) + " " + String(ref) + " " + String(mode) + " " + String(pwmL) + " " + String(pwmR));
 }
