@@ -23,12 +23,14 @@ int modo = 0;
 bool puttyReady = false;
 int tact, tant; //Tiempo entre ciclos
 float distStop;
-float dist1;
-float dist2;
+float dist1, old_dist1;
+float dist2, old_dist2;
 int mode = 0, vel1 = 0, vel2 = 0;
 int tmAct,tmAnt;
 float tm;
 float maxDistDif = 0.5;
+
+float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
 
 void modo1() {
   vel1 = 150;
@@ -95,11 +97,14 @@ void setup() {
   tant = millis();
   tmAct=millis();
   tmAnt=millis();
+
+  old_dist1 = dist1 = ping(Trig1, Echo1); //inicializamos las distancias
+  old_dist2 = dist2 = ping(Trig2, Echo2);
 }
 
 void loop() {
-  dist1 = ping(Trig1, Echo1);
-  dist2 = ping(Trig2, Echo2);
+  filtro(&old_dist1, &dist1, ping(Trig1, Echo1), measureDiff);
+  filtro(&old_dist2, &dist2, ping(Trig2, Echo2), measureDiff);
 
   if (Serial2.available() > 2)
     BTread(&modo, &distStop);
