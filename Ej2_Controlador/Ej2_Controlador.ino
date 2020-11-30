@@ -1,10 +1,10 @@
 #define PERIODO_MUESTREO_MS     ((unsigned long) 20)  // Periodo de muestreo para control (ms).
 
 //Ultrasonidos
-const int Echo1 = 12;
-const int Echo2 = 11;
-const int Trig1 = 10;
-const int Trig2 = 9;
+const int Echo1 = 11;
+const int Echo2 = 12;
+const int Trig1 = 9;
+const int Trig2 = 10;
 
 //Motor Derecho
 const int IN1 = 2;
@@ -47,8 +47,8 @@ void modo2() {
   col2=controlador2(distStop,dist2,tm);
   Serial.println("Col1->"+String(col1)+"Col2->"+String(col2)+"tm->"+String(tm));
 
-  vel1=abs(col1);
-  vel2=abs(col2);
+  vel1=col1;
+  vel2=col2;
   /*
   float distDiff = dist1 - dist2;
   vel1 = 100;

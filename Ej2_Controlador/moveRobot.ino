@@ -1,5 +1,5 @@
 void moveRobot(int vel1, int vel2) {
-  int velMin = 75;
+  int velMin = 70;
   int m1, m2;
   analogWrite(ENA, abs(vel1));
   analogWrite(ENB, abs(vel2));
