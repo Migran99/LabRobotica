@@ -46,17 +46,6 @@ void modo2() {
   col1=controlador1(distStop,dist1,tm);
   col2=controlador2(distStop,dist2,tm);
   Serial.println("Col1->"+String(col1)+"Col2->"+String(col2)+"tm->"+String(tm));
-  
-  if(col1>velMin&&col2>velMin)
-    mode=1;
-  else if (col1<-velMin&&col2<-velMin)
-    mode=2;
-  else if (col1>velMin&&col2<-velMin)
-    mode=3;
-  else if (col1<-velMin&&col2>velMin)
-    mode=4;
-  else
-    mode=0;
 
   vel1=abs(col1);
   vel2=abs(col2);
@@ -120,7 +109,7 @@ void loop() {
   switch (modo)
   {
     case 0:
-      mode = 0; vel1 = 0; vel2 = 0;
+      vel1 = 0; vel2 = 0;
       break;
 
     case 1: //MODO1
@@ -135,7 +124,7 @@ void loop() {
   tmAnt=millis();
   }
 
-  moveRobot(vel1, vel2, mode);
+  moveRobot(vel1, vel2);
   //Telemetría (Putty)
   tact = millis();
   telemetria(tact - tant, dist1, dist2, distStop, mode, vel1, vel2);
