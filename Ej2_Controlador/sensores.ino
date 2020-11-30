@@ -15,13 +15,15 @@ float ping(int TrgPin, int EchoPin) {
 }
 
 int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filtro para el ultrasonido. Devuelve 1 si medida valida, 0 si no.
-  if(abs(pingAct - *distAnt) <= maxDiff * *distAnt){
+  int res;
+  if(abs(pingAct - *distAnt) <= maxDiff){
       *distAct = pingAct;
-      return 1;
+      res = 1;
     }
   else{
       *distAct = *distAct;
-      return 0;
+      res = 0;
     }
   *distAnt = pingAct;
+  return res;
 }

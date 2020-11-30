@@ -28,8 +28,8 @@ float dist2, old_dist2;
 int mode = 0, vel1 = 0, vel2 = 0;
 int tmAct,tmAnt;
 float tm;
-float maxDistDif = 0.5;
-
+float maxDistDif = 3.0;
+float ping1,ping2;
 float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
 
 void modo1() {
@@ -42,16 +42,18 @@ void modo1() {
 
 void modo2() {
   int col1,col2;
+  int velMin=75;
   col1=controlador1(distStop,dist1,tm);
   col2=controlador2(distStop,dist2,tm);
   Serial.println("Col1->"+String(col1)+"Col2->"+String(col2)+"tm->"+String(tm));
-  if(col1>1&&col2>1)
+  
+  if(col1>velMin&&col2>velMin)
     mode=1;
-  else if (col1<-1&&col2<-1)
+  else if (col1<-velMin&&col2<-velMin)
     mode=2;
-  else if (col1>1&&col2<-1)
+  else if (col1>velMin&&col2<-velMin)
     mode=3;
-  else if (col1<-1&&col2>1)
+  else if (col1<-velMin&&col2>velMin)
     mode=4;
   else
     mode=0;
@@ -103,8 +105,10 @@ void setup() {
 }
 
 void loop() {
-  filtro(&old_dist1, &dist1, ping(Trig1, Echo1), measureDiff);
-  filtro(&old_dist2, &dist2, ping(Trig2, Echo2), measureDiff);
+  ping1=ping(Trig1, Echo1);
+  ping2=ping(Trig2, Echo2);
+  filtro(&old_dist1, &dist1, ping1, measureDiff);
+  filtro(&old_dist2, &dist2, ping2, measureDiff);
 
   if (Serial2.available() > 2)
     BTread(&modo, &distStop);
