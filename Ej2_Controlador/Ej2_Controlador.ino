@@ -1,4 +1,4 @@
-#define PERIODO_MUESTREO_MS     ((unsigned long) 20)  // Periodo de muestreo para control (ms).
+#define PERIODO_MUESTREO_MS     ((unsigned long) 100)  // Periodo de muestreo para control (ms).
 
 //Ultrasonidos
 const int Echo1 = 11;
@@ -26,51 +26,63 @@ float distStop;
 float dist1, old_dist1;
 float dist2, old_dist2;
 int vel1 = 0, vel2 = 0;
-int tmAct,tmAnt;
+int tmAct, tmAnt;
 float tm;
 float maxDistDif = 0.5; //Threshold para parar el vehiculo en el modo 1 - Histeresis
-float ping1,ping2;
+float ping1, ping2;
 float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
+int mode = 0;
+
+float dist1Sum, dist2Sum;
+int nMed;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo1() {
-  if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif){
-      vel1 = vel2 = 0;
-    }
-  else if (dist1 > distStop || dist2 > distStop){
-      vel1 = vel2 = 100;
-    }
-  else if (dist1 < distStop || dist2 < distStop){
-      vel1 = vel2 = 100;
-    }
+  if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
+    vel1 = vel2 = 0;
+  }
+  else if (dist1 > distStop || dist2 > distStop) {
+    vel1 = vel2 = 150;
+  }
+  else if (dist1 < distStop || dist2 < distStop) {
+    vel1 = vel2 = -150;
+  }
 }
 
 // Modo 2 con PID para cada uno de los motores -  Suponemos que estan desacoplados y funciona bastanta bien.
 void modo2() {
-  int col1,col2;
-  int velMin=75;
-  col1=controlador1(distStop,dist1,tm);
-  col2=controlador2(distStop,dist2,tm);
-  Serial.println("Col1->"+String(col1)+"Col2->"+String(col2)+"tm->"+String(tm));
+  int col1, col2;
+  int velMin1 = 70;
+  int velMin2 = 70;
+  col1 = round(controlador1(distStop, dist1, tm));
+  col2 = round(controlador2(distStop, dist2, tm));
+  Serial.println("Col1->" + String(col1) + "Col2->" + String(col2) + "tm->" + String(tm));
 
-  vel1=col1;
-  vel2=col2;
+  if (col1 >= 0)
+    vel1 = col1 + velMin1;
+  else
+    vel1 = col1 - velMin1;
+
+  if (col2 >= 0)
+    vel2 = col2 + velMin2;
+  else
+    vel2 = col2 - velMin2;
 
   // Version antigua
   /*
-  float distDiff = dist1 - dist2;
-  vel1 = 100;
-  vel2 = 100;
- if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
+    float distDiff = dist1 - dist2;
+    vel1 = 100;
+    vel2 = 100;
+    if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
     if (distDiff > 2*maxDistDif)  mode = 3;
     else if (distDiff < -2*maxDistDif) mode = 4;
     else mode = 0;
-  }
-  else if (dist1 > distStop || dist2 > distStop) mode = 1;
-  else if (dist1 < distStop || dist2 < distStop) mode = 2;
+    }
+    else if (dist1 > distStop || dist2 > distStop) mode = 1;
+    else if (dist1 < distStop || dist2 < distStop) mode = 2;
 
-  Serial.println("\nMODE 2: Robot Mode-> " + String(mode) +"\t dist1: "+ String(dist1) + "  ;  dist2: " + String(dist2) + "  ;  distDiff:  " + String(distDiff));
-*/
+    Serial.println("\nMODE 2: Robot Mode-> " + String(mode) +"\t dist1: "+ String(dist1) + "  ;  dist2: " + String(dist2) + "  ;  distDiff:  " + String(distDiff));
+  */
 }
 
 void setup() {
@@ -97,44 +109,62 @@ void setup() {
 
   old_dist1 = dist1 = ping(Trig1, Echo1); //inicializamos las distancias
   old_dist2 = dist2 = ping(Trig2, Echo2);
+
+  dist1Sum = 0;
+  dist2Sum = 0;
+  nMed = 0;
 }
 
 void loop() {
   //Lectura sensores y filtrado
-  ping1=ping(Trig1, Echo1);
-  ping2=ping(Trig2, Echo2);
+  ping1 = ping(Trig1, Echo1);
+  ping2 = ping(Trig2, Echo2);
   filtro(&old_dist1, &dist1, ping1, measureDiff);
   filtro(&old_dist2, &dist2, ping2, measureDiff);
+
+  dist1Sum += dist1;
+  dist2Sum += dist2;
+  nMed += 1;
 
   //Hay mas de 2 Bytes listos para ser leidos - Usamos comandos de 3 parametros para configurarlo
   if (Serial2.available() > 2)
     BTread(&modo, &distStop);
 
-  tmAct=millis();
-  if ((tmAct-tmAnt)>=PERIODO_MUESTREO_MS){  
-    
-    tm=(tmAct-tmAnt)/1000.0; //Se pasa a segundos
-    
-    switch (modo){
+  tmAct = millis();
+  if ((tmAct - tmAnt) >= PERIODO_MUESTREO_MS) {
+    //Eliminamos el ruido de las muestras con un promediado
+    dist1 = dist1Sum / nMed;
+    dist2 = dist2Sum / nMed;
+
+    //Resetamos las variables
+    dist1Sum = 0;
+    dist2Sum = 0;
+    nMed = 0;
+
+    tm = (tmAct - tmAnt) / 1000.0; //Se pasa a segundos
+
+    switch (modo) {
       case 0:   //Modo 0 - Parado
         vel1 = 0; vel2 = 0;
         break;
-  
+
       case 1:   //Modo 1 - Avanzar/Retroceder hasta quedarse a X distancia
         modo1();
         break;
-  
+
       case 2:
         modo2(); //Modo 2 - Quedarse a X distancia y en PARALELO
         break;
     }
-    
-    tmAnt=millis();
+
+    moveRobot(vel1, vel2);
+    //Telemetría (Putty)
+    tact = millis();
+    telemetria(tact - tant, dist2, dist1, distStop, mode, vel2, vel1);
+    tant = millis();
+
+    tmAnt = millis();
   }
 
-  moveRobot(vel1, vel2);
-  //Telemetría (Putty)
-  tact = millis();
-  telemetria(tact - tant, dist1, dist2, distStop, mode, vel1, vel2);
-  tant = millis();
+
 }
