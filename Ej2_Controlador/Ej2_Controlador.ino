@@ -25,21 +25,27 @@ int tact, tant; //Tiempo entre ciclos
 float distStop;
 float dist1, old_dist1;
 float dist2, old_dist2;
-int mode = 0, vel1 = 0, vel2 = 0;
+int vel1 = 0, vel2 = 0;
 int tmAct,tmAnt;
 float tm;
-float maxDistDif = 3.0;
+float maxDistDif = 0.5; //Threshold para parar el vehiculo en el modo 1 - Histeresis
 float ping1,ping2;
 float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
 
+// Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo1() {
-  vel1 = 150;
-  vel2 = 150;
-  if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) mode = 0;
-  else if (dist1 > distStop || dist2 > distStop) mode = 1;
-  else if (dist1 < distStop || dist2 < distStop) mode = 2;
+  if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif){
+      vel1 = vel2 = 0;
+    }
+  else if (dist1 > distStop || dist2 > distStop){
+      vel1 = vel2 = 100;
+    }
+  else if (dist1 < distStop || dist2 < distStop){
+      vel1 = vel2 = 100;
+    }
 }
 
+// Modo 2 con PID para cada uno de los motores -  Suponemos que estan desacoplados y funciona bastanta bien.
 void modo2() {
   int col1,col2;
   int velMin=75;
@@ -49,6 +55,8 @@ void modo2() {
 
   vel1=col1;
   vel2=col2;
+
+  // Version antigua
   /*
   float distDiff = dist1 - dist2;
   vel1 = 100;
@@ -84,44 +92,44 @@ void setup() {
 
   Serial.println("SERIAL STARTED"); //Debug
 
-  tact = millis();
-  tant = millis();
-  tmAct=millis();
-  tmAnt=millis();
+  tact =  tant =  millis(); //Medidas para el envio de datos por Bluetooth
+  tmAct = tmAnt = millis(); //Medidas intervalo control
 
   old_dist1 = dist1 = ping(Trig1, Echo1); //inicializamos las distancias
   old_dist2 = dist2 = ping(Trig2, Echo2);
 }
 
 void loop() {
+  //Lectura sensores y filtrado
   ping1=ping(Trig1, Echo1);
   ping2=ping(Trig2, Echo2);
   filtro(&old_dist1, &dist1, ping1, measureDiff);
   filtro(&old_dist2, &dist2, ping2, measureDiff);
 
+  //Hay mas de 2 Bytes listos para ser leidos - Usamos comandos de 3 parametros para configurarlo
   if (Serial2.available() > 2)
     BTread(&modo, &distStop);
 
   tmAct=millis();
-  if ((tmAct-tmAnt)>=PERIODO_MUESTREO_MS)
-  {
-  tm=(tmAct-tmAnt)/1000.0;
-  switch (modo)
-  {
-    case 0:
-      vel1 = 0; vel2 = 0;
-      break;
-
-    case 1: //MODO1
-      modo1();
-      break;
-
-    case 2:
-      modo2();
-      break;
-
-  }
-  tmAnt=millis();
+  if ((tmAct-tmAnt)>=PERIODO_MUESTREO_MS){  
+    
+    tm=(tmAct-tmAnt)/1000.0; //Se pasa a segundos
+    
+    switch (modo){
+      case 0:   //Modo 0 - Parado
+        vel1 = 0; vel2 = 0;
+        break;
+  
+      case 1:   //Modo 1 - Avanzar/Retroceder hasta quedarse a X distancia
+        modo1();
+        break;
+  
+      case 2:
+        modo2(); //Modo 2 - Quedarse a X distancia y en PARALELO
+        break;
+    }
+    
+    tmAnt=millis();
   }
 
   moveRobot(vel1, vel2);
