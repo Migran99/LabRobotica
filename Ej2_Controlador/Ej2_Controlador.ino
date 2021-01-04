@@ -1,4 +1,4 @@
-#define PERIODO_MUESTREO_MS     ((unsigned long) 100)  // Periodo de muestreo para control (ms).
+unsigned long PERIODO_MUESTREO_MS = 100;  // Periodo de muestreo para control (ms).
 
 //Ultrasonidos
 const int Echo1 = 11;
@@ -35,25 +35,29 @@ int mode = 0;
 
 float dist1Sum, dist2Sum;
 int nMed;
+int velUmbral = 90;
+int velMin = 85;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo1() {
+  PERIODO_MUESTREO_MS = 50;
   if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
     vel1 = vel2 = 0;
   }
   else if (dist1 > distStop || dist2 > distStop) {
-    vel1 = vel2 = 150;
+    vel1 = vel2 = 110;
   }
   else if (dist1 < distStop || dist2 < distStop) {
-    vel1 = vel2 = -150;
+    vel1 = vel2 = -110;
   }
 }
 
 // Modo 2 con PID para cada uno de los motores -  Suponemos que estan desacoplados y funciona bastanta bien.
 void modo2() {
+  PERIODO_MUESTREO_MS = 100;
   int col1, col2;
-  int velMin1 = 70;
-  int velMin2 = 70;
+  int velMin1 = velMin;
+  int velMin2 = velMin;
   col1 = round(controlador1(distStop, dist1, tm));
   col2 = round(controlador2(distStop, dist2, tm));
   Serial.println("Col1->" + String(col1) + "Col2->" + String(col2) + "tm->" + String(tm));
@@ -159,6 +163,13 @@ void loop() {
 
     moveRobot(vel1, vel2);
     //Telemetría (Putty)
+
+     if (vel2<velUmbral&&vel2>-velUmbral)
+      vel2=0;
+    
+    if (vel1<velUmbral&&vel1>-velUmbral)
+      vel1=0;
+    
     tact = millis();
     telemetria(tact - tant, dist2, dist1, distStop, mode, vel2, vel1);
     tant = millis();

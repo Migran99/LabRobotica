@@ -5,7 +5,7 @@
 float kp = -4.17540;
 float kd = -0.93737;
 float ki =  -0.3;
-float Umax = 185, Umin = -185; /* Valores límite de la señal de control */
+float Umax = 255-velMin, Umin = -(255-velMin); /* Valores límite de la señal de control */
 
 float controlador1(float Rk, float Yk, float Tm)
 {
