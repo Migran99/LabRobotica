@@ -7,13 +7,13 @@ const int Trig1 = 9;
 const int Trig2 = 10;
 
 //Motor Derecho
-const int IN1 = 2;
-const int IN2 = 3;
+const int IN1 = 25;
+const int IN2 = 26;
 const int ENA = 44;
 
 //Motor Izquierdo
-const int IN3 = 4;
-const int IN4 = 5;
+const int IN3 = 27;
+const int IN4 = 28;
 const int ENB = 45;
 
 //MODO DE FUNCIONAMIENTO
@@ -36,60 +36,33 @@ int mode = 0;
 float dist1Sum, dist2Sum;
 int nMed;
 int velUmbral = 90;
-int velMin = 85;
+int velMinG = 85;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo1() {
-  float distDiff
   PERIODO_MUESTREO_MS = 50;
-  vel1 = 110;
+  vel1 = 130; //110
 
   int col1, col2;
-  int velMin1 = velMin;
-  int velMin2 = velMin;
+  int velMin1 = velMinG;
+  int velMin2 = velMinG;
   //col1 = round(controlador1(distStop, dist1, tm));
-  col1 = 110;
-  col2 = round(controlador2(dist1, dist2, tm));
-  Serial.println("Col1->" + String(col1) + "Col2->" + String(col2) + "tm->" + String(tm));
-
+  col2 = round(controlador2(dist2, dist1, tm));
   vel2 = col2 + vel1;
 }
 
 // Modo 2 con PID para cada uno de los motores -  Suponemos que estan desacoplados y funciona bastanta bien.
-void modo2() {
-  PERIODO_MUESTREO_MS = 100;
+void modo2() { 
+  float distMedia = (dist1+dist2)/2;
+  PERIODO_MUESTREO_MS = 50;
+  vel1 = 130;
+
   int col1, col2;
-  int velMin1 = velMin;
-  int velMin2 = velMin;
-  col1 = round(controlador1(distStop, dist1, tm));
-  col2 = round(controlador2(distStop, dist2, tm));
-  Serial.println("Col1->" + String(col1) + "Col2->" + String(col2) + "tm->" + String(tm));
-
-  if (col1 >= 0)
-    vel1 = col1 + velMin1;
-  else
-    vel1 = col1 - velMin1;
-
-  if (col2 >= 0)
-    vel2 = col2 + velMin2;
-  else
-    vel2 = col2 - velMin2;
-
-  // Version antigua
-  /*
-    float distDiff = dist1 - dist2;
-    vel1 = 100;
-    vel2 = 100;
-    if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
-    if (distDiff > 2*maxDistDif)  mode = 3;
-    else if (distDiff < -2*maxDistDif) mode = 4;
-    else mode = 0;
-    }
-    else if (dist1 > distStop || dist2 > distStop) mode = 1;
-    else if (dist1 < distStop || dist2 < distStop) mode = 2;
-
-    Serial.println("\nMODE 2: Robot Mode-> " + String(mode) +"\t dist1: "+ String(dist1) + "  ;  dist2: " + String(dist2) + "  ;  distDiff:  " + String(distDiff));
-  */
+  int velMin1 = velMinG;
+  int velMin2 = velMinG;
+  col1 = round(controlador1(distStop, distMedia, tm));
+  col2 = round(controlador2(dist2, dist1, tm));
+  vel2 = col1 + col2 + vel1;
 }
 
 void setup() {
@@ -164,7 +137,7 @@ void loop() {
         break;
     }
 
-    moveRobot(vel1, vel2);
+    
     //Telemetría (Putty)
 
      if (vel2<velUmbral&&vel2>-velUmbral)
@@ -176,6 +149,7 @@ void loop() {
     tact = millis();
     telemetria(tact - tant, dist2, dist1, distStop, mode, vel2, vel1);
     tant = millis();
+    moveRobot(vel1, vel2);
 
     tmAnt = millis();
   }

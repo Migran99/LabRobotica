@@ -2,13 +2,14 @@
 //float kd = -0.93737 * 1;
 //float ki = -0.1 * 1;
 
-float kp = 4.17540;
-float kd = 0.93737;
-float ki =  0.3;
-float Umax = 20, Umin = -20; /* Valores límite de la señal de control */
+float Umax = 50, Umin = -50; /* Valores límite de la señal de control */
 
 float controlador1(float Rk, float Yk, float Tm)
 {
+  float kp = -5*4.17540;
+  float kd = -0.93737;
+  float ki = -0.3;
+  
   float Uk, Uks; //Señal de control y señal de control saturada
   float uk; //Señal de control incremental
   float Ueq = 0;
@@ -41,8 +42,13 @@ float controlador1(float Rk, float Yk, float Tm)
 
   return Uks;
 }
+
+
 float controlador2(float Rk, float Yk, float Tm)
 {
+  float kp = 4.17540;
+  float kd = 0*0.93737;
+  float ki =  0.3*0;
   float Uk, Uks; //Señal de control y señal de control saturada
   float uk; //Señal de control incremental
   float Ueq = 0;
