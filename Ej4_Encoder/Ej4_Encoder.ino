@@ -16,6 +16,16 @@ const int IN3 = 27;
 const int IN4 = 28;
 const int ENB = 45;
 
+//Encoders
+const int ENCL = 2;
+const int ENCR = 3;
+const int rtL = 48;
+const int rtR = 48;
+unsigned long LenconderCnt;
+unsigned long RenconderCnt;
+unsigned long timeEncAnt,timeEncAct;
+double rpmL, rpmR;
+
 //MODO DE FUNCIONAMIENTO
 int modo = 0;
 
@@ -23,8 +33,8 @@ int modo = 0;
 bool puttyReady = false;
 int tact, tant; //Tiempo entre ciclos
 float distStop;
-float dist1, old_dist1;
-float dist2, old_dist2;
+float dist1, old_dist1 = 0;
+float dist2, old_dist2 = 0;
 int vel1 = 0, vel2 = 0;
 int tmAct, tmAnt;
 float tm;
@@ -40,16 +50,24 @@ int velMinG = 85;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo1() {
-  PERIODO_MUESTREO_MS = 50;
-  vel1 = 130; //110
-
   int col1, col2;
   int velMin1 = velMinG;
   int velMin2 = velMinG;
-  //col1 = round(controlador1(distStop, dist1, tm));
-  //col2 = round(controlador2(dist2, dist1, tm));
-  col2 = round(controlador2(0, dist1-dist2, tm));
-  vel2 = col2 + vel1;
+  double refR = 100;
+  double refL = 100;
+  
+  PERIODO_MUESTREO_MS = 50;
+  col1 = round(controlador1(refR, rpmR, tm));
+  col2 = round(controlador2(refL, rpmL, tm));
+  if (col1 >= 0)
+    vel1 = col1 + velMin1;
+  else
+    vel1 = col1 - velMin1;
+
+  if (col2 >= 0)
+    vel2 = col2 + velMin2;
+  else
+    vel2 = col2 - velMin2;
 }
 
 // Modo 2 con PID para cada uno de los motores -  Suponemos que estan desacoplados y funciona bastanta bien.
@@ -89,42 +107,24 @@ void setup() {
   tact =  tant =  millis(); //Medidas para el envio de datos por Bluetooth
   tmAct = tmAnt = millis(); //Medidas intervalo control
 
-  old_dist1 = dist1 = ping(Trig1, Echo1); //inicializamos las distancias
-  old_dist2 = dist2 = ping(Trig2, Echo2);
-
-  dist1Sum = 0;
-  dist2Sum = 0;
-  nMed = 0;
+  pinMode(ENCL,INPUT_PULLUP);
+  pinMode(ENCR,INPUT_PULLUP);
+  
+  LenconderCnt = RenconderCnt = 0;
+  attachInterrupt(digitalPinToInterrupt(ENCR), ISRRight, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCL), ISRLeft, RISING);
+  timeEncAnt = timeEncAct = micros();
 }
 
 void loop() {
-  //Lectura sensores y filtrado
-  ping1 = ping(Trig1, Echo1);
-  ping2 = ping(Trig2, Echo2);
-  filtro(&old_dist1, &dist1, ping1, measureDiff);
-  filtro(&old_dist2, &dist2, ping2, measureDiff);
-
-  dist1Sum += dist1;
-  dist2Sum += dist2;
-  nMed += 1;
-
   //Hay mas de 2 Bytes listos para ser leidos - Usamos comandos de 3 parametros para configurarlo
   if (Serial2.available() > 2)
     BTread(&modo, &distStop);
 
   tmAct = millis();
   if ((tmAct - tmAnt) >= PERIODO_MUESTREO_MS) {
-    //Eliminamos el ruido de las muestras con un promediado
-    dist1 = dist1Sum / nMed;
-    dist2 = dist2Sum / nMed;
-
-    //Resetamos las variables
-    dist1Sum = 0;
-    dist2Sum = 0;
-    nMed = 0;
-
+    medirVelocidad();
     tm = (tmAct - tmAnt) / 1000.0; //Se pasa a segundos
-
     switch (modo) {
       case 0:   //Modo 0 - Parado
         vel1 = 0; vel2 = 0;
@@ -141,15 +141,15 @@ void loop() {
 
     
     //Telemetría (Putty)
-
-     if (vel2<velUmbral&&vel2>-velUmbral)
-      vel2=0;
-    
-    if (vel1<velUmbral&&vel1>-velUmbral)
-      vel1=0;
+//
+//     if (vel2<velUmbral&&vel2>-velUmbral)
+//      vel2=0;
+//    
+//    if (vel1<velUmbral&&vel1>-velUmbral)
+//      vel1=0;
     
     tact = millis();
-    telemetria(tact - tant, dist2, dist1, distStop, mode, vel2, vel1);
+    telemetria(tact - tant, rpmL, rpmR, distStop, mode, vel2, vel1);
     tant = millis();
     moveRobot(vel1, vel2);
 

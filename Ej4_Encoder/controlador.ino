@@ -6,10 +6,10 @@
 
 float controlador1(float Rk, float Yk, float Tm)
 {
-  float Umax = 5, Umin = -5; /* Valores límite de la señal de control */
-  float kp = -0.25;
-  float kd = 0;
-  float ki = -0;
+  float Umax = 255-velMinG, Umin = -(255-velMinG); /* Valores límite de la señal de control */
+  float kp = 4.17540;
+  float kd = 0.93737;
+  float ki = 0.3;
   
   float Uk, Uks; //Señal de control y señal de control saturada
   float uk; //Señal de control incremental
@@ -31,7 +31,7 @@ float controlador1(float Rk, float Yk, float Tm)
 //    Uk = -Ueq + uk;
 //  else
 //    Uk = 0;
-
+  Serial.println(uk);
   Uk=uk;
   /* Saturación de la señal de control */
   if (Uk > Umax) Uks = Umax;
@@ -47,10 +47,10 @@ float controlador1(float Rk, float Yk, float Tm)
 
 float controlador2(float Rk, float Yk, float Tm)
 {
-  float Umax = 70, Umin = -35; /* Valores límite de la señal de control */
-  float kp = 15;
-  float kd = 0;
-  float ki =  0.5;
+  float Umax = 255-velMinG, Umin = -(255-velMinG); /* Valores límite de la señal de control */
+  float kp = 4.17540;
+  float kd = 0.93737;
+  float ki = 0.3;
   float Uk, Uks; //Señal de control y señal de control saturada
   float uk; //Señal de control incremental
   float Ueq = 0;

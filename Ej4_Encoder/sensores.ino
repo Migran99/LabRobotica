@@ -27,3 +27,26 @@ int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filt
   *distAnt = pingAct;
   return res;
 }
+
+void ISRLeft(){
+  LenconderCnt++;
+}
+
+void ISRRight(){
+  RenconderCnt++;
+}
+
+void medirVelocidad()
+{
+  unsigned long interv;
+  
+  timeEncAct = micros();
+  interv=timeEncAct-timeEncAnt;
+
+  rpmL = (double)(LenconderCnt*pow(10,6)*60.0)/(interv*4.0*rtL);
+  rpmR = (double)(RenconderCnt*pow(10,6)*60.0)/(interv*4.0*rtR); 
+
+  timeEncAnt = micros();
+  LenconderCnt = 0;
+  RenconderCnt = 0;
+}
