@@ -7,9 +7,9 @@
 float controlador1(float Rk, float Yk, float Tm)
 {
   float Umax = 5, Umin = -5; /* Valores límite de la señal de control */
-  float kp = -0.25;
+  float kp = -0.3; //0.25
   float kd = 0;
-  float ki = -0;
+  float ki = -0.05;
   
   float Uk, Uks; //Señal de control y señal de control saturada
   float uk; //Señal de control incremental
