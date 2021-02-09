@@ -42,6 +42,7 @@ void medirVelocidad()
   timeEncAnt = micros();
   LenconderCnt = 0;
   RenconderCnt = 0;
+  
 }
 
 void loop() {

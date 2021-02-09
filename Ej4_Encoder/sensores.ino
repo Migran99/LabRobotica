@@ -28,14 +28,6 @@ int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filt
   return res;
 }
 
-void ISRLeft(){
-  LenconderCnt++;
-}
-
-void ISRRight(){
-  RenconderCnt++;
-}
-
 void medirVelocidad()
 {
   unsigned long interv;
@@ -49,4 +41,7 @@ void medirVelocidad()
   timeEncAnt = micros();
   LenconderCnt = 0;
   RenconderCnt = 0;
+
+  Serial.println(rpmL);
+  
 }
