@@ -1,6 +1,6 @@
 #define pi          3.1416
 #define radioRueda  3.20   //cm
-#define baseline    11.0  //cm
+#define baseline    8.0  //cm
 
 unsigned long PERIODO_MUESTREO_MS = 50;  // Periodo de muestreo para control (ms).
 
@@ -52,20 +52,22 @@ double velRef;
 
 float dist1Sum, dist2Sum;
 int nMed;
-int velUmbral = 70;
-int velMinG = 65;
+int velUmbral = 85;
+int velMinG = 80;
 
 //Variable odometria
 float vl, vr, vx, vy, v;
 float phid;
 float posx, posy, phi;
 
-float posRef[][2] = {{0, 100}, {100, 100},{-100,0}};
+const float lado = 50.0;
+
+float posRef[3][2] = {{0.0, lado}, { -lado, lado}, { -lado, 0.0}};
 int ip = 0;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo5() {
-  PERIODO_MUESTREO_MS = 50;
+  PERIODO_MUESTREO_MS = 10;
 
   int col1, col2;
   int velMin1 = velMinG;
@@ -77,7 +79,7 @@ void modo5() {
     vel1 = col1 + velMin1;
   else
     vel1 = col1 - velMin1;
-  if (col1 > 0)
+  if (col2 > 0)
     vel2 = col2 + velMin2;
   else
     vel2 = col2 - velMin2;
@@ -96,7 +98,7 @@ void modo6() {
     vel1 = col1 + velMin1;
   else
     vel1 = col1 - velMin1;
-  if (col1 > 0)
+  if (col2 > 0)
     vel2 = col2 + velMin2;
   else
     vel2 = col2 - velMin2;
@@ -104,7 +106,6 @@ void modo6() {
 
 float wCont, vCont;
 void modo7() {
-
   PERIODO_MUESTREO_MS = 50;
   int col1, col2;
   int velMin1 = velMinG;
@@ -112,38 +113,60 @@ void modo7() {
   float angRef, eAng;
   float eLineal;
   float vLCont, vRCont;
-  angRef = atan2(posRef[ip][1] - posy, posRef[ip][0] - posx); //angulo deseado
-  while (angRef < 0) angRef += 2 * pi;
-  eAng = angRef - phi;
-  eLineal = sqrt(pow(posRef[ip][1] - posy, 2) + pow(posRef[ip][0] - posx, 2)); //error lineal
 
-  if (abs(eAng) < 0.1 && ip < 2) ip++;
-  else {
+  //angRef = atan2(posRef[ip][1] - posy, posRef[ip][0] - posx); //angulo deseado
+  angRef = pi/2.0;
+  while (angRef < 0) angRef += 2.0 * pi;
+  eAng = angRef - phi;
+  if (eAng > pi) eAng -= 2.0 * pi;
+  else if (eAng < -pi) eAng += 2.0 * pi;
+  //eLineal = sqrt(pow(posRef[ip][1] - posy, 2) + pow(posRef[ip][0] - posx, 2)); //error lineal
+
+  if (abs(eAng) > 0.1) {
     wCont = controlador3(0, -eAng, tm);
-    Serial.println(eAng);
-    //Serial.println(wCont);
-    vCont = controlador4(0, -eLineal, tm);
     vCont = 0;
+
+
     vLCont = vCont - baseline * wCont / 2.0;
     vRCont = vCont + baseline * wCont / 2.0;
 
     vLCont = linear2angular(vLCont);
     vRCont = linear2angular(vRCont);
 
-
+//
     col1 = round(controlador1(vRCont, m1 * rpmR, tm));
     col2 = round(controlador2(vLCont, m2 * rpmL, tm));
-
-    if (col1 > 0)
-      vel1 = col1 + velMin1;
-    else
-      vel1 = col1 - velMin1;
-    if (col1 > 0)
-      vel2 = col2 + velMin2;
-    else
-      vel2 = col2 - velMin2;
-
+//    if (wCont > 0) { //izq atras der delante
+//      col2 = -70;
+//      col1 = 70;
+//    }
+//    else {
+//      col2 = 70;
+//      col1 = -70;
+//    }
   }
+  //  else if (eLineal > 1.0) {
+  //
+  //    Serial.println(eAng);
+  //    //Serial.println(wCont);
+  //    vCont = controlador4(0, -eLineal, tm);
+  //    wCont = 0;
+  //  }
+  else {
+    vCont = wCont = 0;
+    col1 = col2 = 0;
+    if (ip < 2)ip++;
+  }
+
+
+  if (col1 > 0)
+    vel1 = col1 + velMin1;
+  else
+    vel1 = col1 - velMin1;
+  if (col2 > 0)
+    vel2 = col2 + velMin2;
+  else
+    vel2 = col2 - velMin2;
 }
 
 void ISRLeft() {
@@ -211,15 +234,15 @@ void loop() {
     phid = (vr - vl) / baseline;
     v = (vl + vr) / 2.0;
 
-    phi += phid * PERIODO_MUESTREO_MS / 1000.0;
+    phi += phid * (tmAct - tmAnt) / 1000.0;
     while (phi > 2 * pi) phi -= 2 * pi;
     while (phi < 0) phi += 2 * pi;
 
     vx = v * cos(phi);
     vy = v * sin(phi);
 
-    posx += vx * PERIODO_MUESTREO_MS / 1000.0;
-    posy += vy * PERIODO_MUESTREO_MS / 1000.0;
+    posx += vx * (tmAct - tmAnt) / 1000.0;
+    posy += vy * (tmAct - tmAnt) / 1000.0;
 
 
 
@@ -239,22 +262,21 @@ void loop() {
         modo7();
         break;
     }
-
+    tmAnt = millis();
 
     //Telemetría (Putty)
-/*
-    if (vel2 < velUmbral && vel2 > -velUmbral)
-      vel2 = 0;
+    /*
+        if (vel2 < velUmbral && vel2 > -velUmbral)
+          vel2 = 0;
 
-    if (vel1 < velUmbral && vel1 > -velUmbral)
-      vel1 = 0;
-*/
+        if (vel1 < velUmbral && vel1 > -velUmbral)
+          vel1 = 0;
+    */
     tact = millis();
     //telemetria(tact - tant, m2*rpmL, m1*rpmR, velRef, mode, vel2, vel1);
     telemetriaOD(tact - tant, posx, posy, vx, vy, wCont, vCont, vel2, vel1, phi);
     tant = millis();
     moveRobot(vel1, vel2);
-    tmAnt = millis();
   }
 
   //delay(100);

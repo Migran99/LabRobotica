@@ -87,8 +87,8 @@ float controlador2(float Rk, float Yk, float Tm)
 
 float controlador3(float Rk, float Yk, float Tm)
 {
-  float Umax = 1000, Umin = -1000; /* Valores límite de la señal de control */
-  float kp = 2;
+  float Umax = 80, Umin = -80; /* Valores límite de la señal de control */
+  float kp = 8;
   float kd = 0;
   float ki = 0;
   
@@ -127,8 +127,8 @@ float controlador3(float Rk, float Yk, float Tm)
 
 float controlador4(float Rk, float Yk, float Tm)
 {
-  float Umax = 20, Umin = 0; /* Valores límite de la señal de control */
-  float kp = 0.4;
+  float Umax = 30, Umin = 0; /* Valores límite de la señal de control */
+  float kp = 0.6;
   float kd = 0;
   float ki = 0;
   
