@@ -62,7 +62,7 @@ float posx, posy, phi;
 
 const float lado = 50.0;
 
-float posRef[3][2] = {{0.0, lado}, { -lado, lado}, { -lado, 0.0}};
+float posRef[4][2] = {{0.0, lado}, { -lado, lado}, { -lado, 0.0},{0.0,0.0}};
 int ip = 0;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
@@ -114,13 +114,13 @@ void modo7() {
   float eLineal;
   float vLCont, vRCont;
 
-  //angRef = atan2(posRef[ip][1] - posy, posRef[ip][0] - posx); //angulo deseado
-  angRef = pi/2.0;
+  angRef = atan2(posRef[ip][1] - posy, posRef[ip][0] - posx); //angulo deseado
+  //angRef = pi / 2.0;
   while (angRef < 0) angRef += 2.0 * pi;
   eAng = angRef - phi;
   if (eAng > pi) eAng -= 2.0 * pi;
   else if (eAng < -pi) eAng += 2.0 * pi;
-  //eLineal = sqrt(pow(posRef[ip][1] - posy, 2) + pow(posRef[ip][0] - posx, 2)); //error lineal
+  eLineal = sqrt(pow(posRef[ip][1] - posy, 2) + pow(posRef[ip][0] - posx, 2)); //error lineal
 
   if (abs(eAng) > 0.1) {
     wCont = controlador3(0, -eAng, tm);
@@ -133,29 +133,39 @@ void modo7() {
     vLCont = linear2angular(vLCont);
     vRCont = linear2angular(vRCont);
 
-//
+    //
     col1 = round(controlador1(vRCont, m1 * rpmR, tm));
     col2 = round(controlador2(vLCont, m2 * rpmL, tm));
-//    if (wCont > 0) { //izq atras der delante
-//      col2 = -70;
-//      col1 = 70;
-//    }
-//    else {
-//      col2 = 70;
-//      col1 = -70;
-//    }
+    //    if (wCont > 0) { //izq atras der delante
+    //      col2 = -70;
+    //      col1 = 70;
+    //    }
+    //    else {
+    //      col2 = 70;
+    //      col1 = -70;
+    //    }
   }
-  //  else if (eLineal > 1.0) {
-  //
-  //    Serial.println(eAng);
-  //    //Serial.println(wCont);
-  //    vCont = controlador4(0, -eLineal, tm);
-  //    wCont = 0;
-  //  }
+  else if (eLineal > 1.0) {
+
+    Serial.println(eAng);
+    //Serial.println(wCont);
+    vCont = controlador4(0, -eLineal, tm);
+    wCont = 0;
+
+    vLCont = vCont - baseline * wCont / 2.0;
+    vRCont = vCont + baseline * wCont / 2.0;
+
+    vLCont = linear2angular(vLCont);
+    vRCont = linear2angular(vRCont);
+
+    //
+    col1 = round(controlador1(vRCont, m1 * rpmR, tm));
+    col2 = round(controlador2(vLCont, m2 * rpmL, tm));
+  }
   else {
     vCont = wCont = 0;
     col1 = col2 = 0;
-    if (ip < 2)ip++;
+    if(ip < 3)ip++;
   }
 
 
