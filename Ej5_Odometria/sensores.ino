@@ -42,6 +42,6 @@ void medirVelocidad()
   LenconderCnt = 0;
   RenconderCnt = 0;
 
-  Serial.println(rpmL);
+  //Serial.println(rpmL);
   
 }

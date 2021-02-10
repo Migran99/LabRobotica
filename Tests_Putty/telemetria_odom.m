@@ -11,7 +11,7 @@
 % -Velocidad PWM motor Izq (+/-255, negativo indica marcha atrás), 
 % -Velocidad PWM motor Dch (+/-255, negativo indica marcha atrás).
 
-function telemetria(archivo)
+function telemetria_odom(archivo)
 
 %time,posx,posy,vx,vy,vL,vR,velIzq,velDer
 
@@ -33,6 +33,7 @@ plot(tel(:,2),tel(:,3))
 xlabel('X (cm)');
 ylabel('Y (cm)');
 title('Trayectoria')
+axis('equal')
 
 subplot(3,1,3)
 plot(tiempo,tel(:,2), tiempo,tel(:,3),tiempo,tel(:,10))
@@ -49,7 +50,7 @@ ylabel('Vx,Vy (cm/s)');
 subplot(3,1,2);
 plot(tiempo,tel(:,6), tiempo,tel(:,7));
 xlabel('Tiempo (ms)');
-ylabel('VL,VR (cm/s)');
+ylabel('w,v ');
 
 subplot(3,1,3);
 plot(tiempo,tel(:,8), tiempo,tel(:,9));
