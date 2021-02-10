@@ -1,6 +1,6 @@
 #define pi          3.1416
-#define radioRueda  3.20   //cm
-#define baseline    8.0  //cm
+#define radioRueda  3.2   //cm
+#define baseline    8.0 //cm
 
 unsigned long PERIODO_MUESTREO_MS = 50;  // Periodo de muestreo para control (ms).
 
@@ -60,9 +60,9 @@ float vl, vr, vx, vy, v;
 float phid;
 float posx, posy, phi;
 
-const float lado = 50.0;
+const float lado = 100.0;
 
-float posRef[4][2] = {{0.0, lado}, { -lado, lado}, { -lado, 0.0},{0.0,0.0}};
+float posRef[4][2] = {{lado, 0.0}, { lado, lado}, { 0.0, lado},{0.0,0.0}};
 int ip = 0;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
