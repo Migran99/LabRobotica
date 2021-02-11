@@ -1,6 +1,6 @@
 #define pi          3.1416
 #define radioRueda  3.2   //cm
-#define baseline    8.0 //cm
+#define baseline    9.0 //cm
 
 unsigned long PERIODO_MUESTREO_MS = 50;  // Periodo de muestreo para control (ms).
 
@@ -60,20 +60,36 @@ float vl, vr, vx, vy, v;
 float phid;
 float posx, posy, phi;
 
+//Variables descriptoras figura
 const float lado = 100.0;
-
-float posRef[4][2] = {{lado, 0.0}, { lado, lado}, { 0.0, lado},{0.0,0.0}};
+float posRef[4][2] = {{lado, 0.0}, { lado, -lado}, { 0.0, -lado}, {0.0, 0.0}};
 int ip = 0;
+
+//Variables descripción circulos
+float radioCurv = 10;
+
+//Medida nube puntos
+float distPunto;
 
 // Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
 void modo5() {
-  PERIODO_MUESTREO_MS = 10;
-
+  PERIODO_MUESTREO_MS = 50;
+  float velRefL, velRefR;
+  float curvatura;
   int col1, col2;
   int velMin1 = velMinG;
   int velMin2 = velMinG;
-  col1 = round(controlador1(velRef, m1 * rpmR, tm));
-  col2 = round(controlador2(velRef, m2 * rpmL, tm));
+
+  curvatura = 1.0 / radioCurv;
+
+  velRefL = (40.0 / radioRueda) * (1.0 + (baseline / 2.0) * curvatura);
+  velRefR = (40.0 / radioRueda) * (1.0 - (baseline / 2.0) * curvatura);
+
+  velRefL = velRefL * 30.0 / pi;
+  velRefR = velRefR * 30.0 / pi;
+
+  col1 = round(controlador1(velRefR, m1 * rpmR, tm));
+  col2 = round(controlador2(velRefL, m2 * rpmL, tm));
 
   if (col1 > 0)
     vel1 = col1 + velMin1;
@@ -134,8 +150,8 @@ void modo7() {
     vRCont = linear2angular(vRCont);
 
     //
-    col1 = round(controlador1(vRCont, m1 * rpmR, tm));
-    col2 = round(controlador2(vLCont, m2 * rpmL, tm));
+    col1 = round(controlador1(vRCont, rpmR, tm));
+    col2 = round(controlador2(vLCont, rpmL, tm));
   }
   else if (eLineal > 1.0) {
 
@@ -157,7 +173,7 @@ void modo7() {
   else {
     vCont = wCont = 0;
     col1 = col2 = 0;
-    if(ip < 3)ip++;
+    if (ip < 3)ip++;
   }
 
 
@@ -189,6 +205,10 @@ float linear2angular(float vlin) {
 void setup() {
   pinMode(ENCL, INPUT_PULLUP);
   pinMode(ENCR, INPUT_PULLUP);
+  pinMode(Trig1, OUTPUT);
+  pinMode(Echo1, INPUT);
+  pinMode(Trig2, OUTPUT);
+  pinMode(Echo2, INPUT);
 
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
@@ -220,9 +240,15 @@ void loop() {
 
   //Hay mas de 3 Bytes listos para ser leidos - Usamos comandos de 3 parametros para configurarlo
   if (Serial2.available() > 3)
-    BTread(&modo, &velRef);
+    BTread(&modo, &radioCurv, &velRef);
+
+
+  //Medida ultrasonido
+  distPunto = ping(Trig1, Echo1);
+  Serial.println(distPunto);
 
   tmAct = millis();
+
   if ((tmAct - tmAnt) >= PERIODO_MUESTREO_MS) {
     //Lectura encoders
     medirVelocidad();
@@ -230,8 +256,8 @@ void loop() {
 
 
     //Odometria
-    vl = angular2linear(m2 * rpmL);
-    vr = angular2linear(m1 * rpmR);
+    vl = angular2linear(rpmL);
+    vr = angular2linear(rpmR);
 
     phid = (vr - vl) / baseline;
     v = (vl + vr) / 2.0;
@@ -245,8 +271,6 @@ void loop() {
 
     posx += vx * (tmAct - tmAnt) / 1000.0;
     posy += vy * (tmAct - tmAnt) / 1000.0;
-
-
 
     //Control
     switch (modo) {
@@ -274,9 +298,11 @@ void loop() {
         if (vel1 < velUmbral && vel1 > -velUmbral)
           vel1 = 0;
     */
+
     tact = millis();
     //telemetria(tact - tant, m2*rpmL, m1*rpmR, velRef, mode, vel2, vel1);
-    telemetriaOD(tact - tant, posx, posy, vx, vy, wCont, vCont, vel2, vel1, phi);
+    //telemetriaOD(tact - tant, posx, posy, vx, vy, wCont, vCont, vel2, vel1, phi);
+    telemetriaObj(tact - tant, posx, posy, phi, distPunto);
     tant = millis();
     moveRobot(vel1, vel2);
   }
