@@ -1,14 +1,13 @@
 #define pi          3.1416
-#define radioRueda  3.2   //cm
-#define baseline    9.0 //cm
+#define radioRueda  3.2     //cm
+#define baseline    9.0     //cm
 
-unsigned long PERIODO_MUESTREO_MS = 50;  // Periodo de muestreo para control (ms).
+// Periodo de muestreo para control (ms)
+unsigned long PERIODO_MUESTREO_MS = 50;
 
 //Ultrasonidos
 const int Echo1 = 11;
-const int Echo2 = 12;
 const int Trig1 = 9;
-const int Trig2 = 10;
 
 //Motor Derecho
 const int IN1 = 25;
@@ -32,151 +31,54 @@ unsigned long RenconderCnt;
 unsigned long timeEncAnt, timeEncAct;
 double rpmL, rpmR;
 
-//MODO DE FUNCIONAMIENTO
+//Modo de funcionamiento
 int modo = 0;
 
 //Variables de funcionamiento
 bool puttyReady = false;
-int tact, tant; //Tiempo entre ciclos
-float distStop;
-float dist1, old_dist1;
-float dist2, old_dist2;
+int tact, tant;
 int vel1 = 0, vel2 = 0;
 int tmAct, tmAnt;
 float tm;
-float maxDistDif = 0.5; //Threshold para parar el vehiculo en el modo 1 - Histeresis
-float ping1, ping2;
-float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
 int mode = 0;
-double velRef;
-
-float dist1Sum, dist2Sum;
-int nMed;
 int velUmbral = 85;
 int velMinG = 80;
+double velRef = 40.0;    /*Velocidad de crucero de la circunferencia*/
 
-//Variable odometria
+//Variables de odometria
 float vl, vr, vx, vy, v;
 float phid;
 float posx, posy, phi;
 
-//Variables descriptoras figura
-const float lado = 100.0;
-float posRef[4][2] = {{lado, 0.0}, { lado, -lado}, { 0.0, -lado}, {0.0, 0.0}};
-int ip = 0;
-
 //Variables descripción circulos
-float radioCurv = 10;
+float radioCurv = 10;   /*Radio de la circunferencia que describe (valor por defecto)*/
 
 //Medida nube puntos
-float distPunto;
+float distPunto;        /*Medida de la distancia al objeto*/
 
-// Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
-void modo5() {
-  PERIODO_MUESTREO_MS = 50;
+void modo_avanzado() {
   float velRefL, velRefR;
   float curvatura;
   int col1, col2;
   int velMin1 = velMinG;
   int velMin2 = velMinG;
 
+  //Calculo de la curvatura
   curvatura = 1.0 / radioCurv;
 
-  velRefL = (40.0 / radioRueda) * (1.0 + (baseline / 2.0) * curvatura);
-  velRefR = (40.0 / radioRueda) * (1.0 - (baseline / 2.0) * curvatura);
-
+  //Calculo de la velocidad de giro de las ruedas
+  velRefL = (velRef / radioRueda) * (1.0 + (baseline / 2.0) * curvatura);
+  velRefR = (velRef / radioRueda) * (1.0 - (baseline / 2.0) * curvatura);
+  
+  //Pasamos de rad/s a rpm
   velRefL = velRefL * 30.0 / pi;
   velRefR = velRefR * 30.0 / pi;
 
+  //Calculamos la señal de control
   col1 = round(controlador1(velRefR, m1 * rpmR, tm));
   col2 = round(controlador2(velRefL, m2 * rpmL, tm));
 
-  if (col1 > 0)
-    vel1 = col1 + velMin1;
-  else
-    vel1 = col1 - velMin1;
-  if (col2 > 0)
-    vel2 = col2 + velMin2;
-  else
-    vel2 = col2 - velMin2;
-}
-
-void modo6() {
-  PERIODO_MUESTREO_MS = 50;
-
-  int col1, col2;
-  int velMin1 = velMinG;
-  int velMin2 = velMinG;
-  col1 = round(controlador1(velRef, m1 * rpmR, tm));
-  col2 = round(controlador2(-velRef, m2 * rpmL, tm));
-
-  if (col1 > 0)
-    vel1 = col1 + velMin1;
-  else
-    vel1 = col1 - velMin1;
-  if (col2 > 0)
-    vel2 = col2 + velMin2;
-  else
-    vel2 = col2 - velMin2;
-}
-
-float wCont, vCont;
-void modo7() {
-  PERIODO_MUESTREO_MS = 50;
-  int col1, col2;
-  int velMin1 = velMinG;
-  int velMin2 = velMinG;
-  float angRef, eAng;
-  float eLineal;
-  float vLCont, vRCont;
-
-  angRef = atan2(posRef[ip][1] - posy, posRef[ip][0] - posx); //angulo deseado
-  //angRef = pi / 2.0;
-  while (angRef < 0) angRef += 2.0 * pi;
-  eAng = angRef - phi;
-  if (eAng > pi) eAng -= 2.0 * pi;
-  else if (eAng < -pi) eAng += 2.0 * pi;
-  eLineal = sqrt(pow(posRef[ip][1] - posy, 2) + pow(posRef[ip][0] - posx, 2)); //error lineal
-
-  if (abs(eAng) > 0.1) {
-    wCont = controlador3(0, -eAng, tm);
-    vCont = 0;
-
-
-    vLCont = vCont - baseline * wCont / 2.0;
-    vRCont = vCont + baseline * wCont / 2.0;
-
-    vLCont = linear2angular(vLCont);
-    vRCont = linear2angular(vRCont);
-
-    //
-    col1 = round(controlador1(vRCont, rpmR, tm));
-    col2 = round(controlador2(vLCont, rpmL, tm));
-  }
-  else if (eLineal > 1.0) {
-
-    Serial.println(eAng);
-    //Serial.println(wCont);
-    vCont = controlador4(0, -eLineal, tm);
-    wCont = 0;
-
-    vLCont = vCont - baseline * wCont / 2.0;
-    vRCont = vCont + baseline * wCont / 2.0;
-
-    vLCont = linear2angular(vLCont);
-    vRCont = linear2angular(vRCont);
-
-    //
-    col1 = round(controlador1(vRCont, m1 * rpmR, tm));
-    col2 = round(controlador2(vLCont, m2 * rpmL, tm));
-  }
-  else {
-    vCont = wCont = 0;
-    col1 = col2 = 0;
-    if (ip < 3)ip++;
-  }
-
-
+  //Evitamos las zonas muertas
   if (col1 > 0)
     vel1 = col1 + velMin1;
   else
@@ -203,13 +105,15 @@ float linear2angular(float vlin) {
 }
 
 void setup() {
+  //Entrada de los encoders
   pinMode(ENCL, INPUT_PULLUP);
   pinMode(ENCR, INPUT_PULLUP);
+
+  //Conexion del ultrasonidos
   pinMode(Trig1, OUTPUT);
   pinMode(Echo1, INPUT);
-  pinMode(Trig2, OUTPUT);
-  pinMode(Echo2, INPUT);
 
+  //Actuadores: Motores
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
@@ -217,19 +121,19 @@ void setup() {
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
 
+  //Comunicacion con el BT
   Serial2.begin(38400);
 
-  Serial.begin(9600); //Debug
+  //Medidas para el envio de datos por Bluetooth
+  tact =  tant =  millis(); 
+  
+  //Medidas intervalo control
+  tmAct = tmAnt = millis(); 
 
-  Serial.println("SERIAL STARTED"); //Debug
+  //Inicializamos a 0
+  phi = posx = posy = 0;
 
-  tact =  tant =  millis(); //Medidas para el envio de datos por Bluetooth
-  tmAct = tmAnt = millis(); //Medidas intervalo control
-
-  velRef = 0;
-
-  phi = posx = posy = 0; //Inicializamos a 0
-
+  //Asociamos interrupciones para el cencoder
   LenconderCnt = RenconderCnt = 0;
   attachInterrupt(digitalPinToInterrupt(ENCR), ISRRight, RISING);
   attachInterrupt(digitalPinToInterrupt(ENCL), ISRLeft, RISING);
@@ -238,74 +142,50 @@ void setup() {
 
 void loop() {
 
-  //Hay mas de 3 Bytes listos para ser leidos - Usamos comandos de 3 parametros para configurarlo
+  //Hay 4 o más Bytes listos para ser leidos (Usamos comandos de 4 parametros para configurarlo)
   if (Serial2.available() > 3)
     BTread(&modo, &radioCurv, &velRef);
 
-
   //Medida ultrasonido
   distPunto = ping(Trig1, Echo1);
-  Serial.println(distPunto);
 
+  //FUNCIONAMIENTO
   tmAct = millis();
-
   if ((tmAct - tmAnt) >= PERIODO_MUESTREO_MS) {
+    
     //Lectura encoders
     medirVelocidad();
-    tm = (tmAct - tmAnt) / 1000.0; //Se pasa a segundos
+    tm = (tmAct - tmAnt) / 1000.0; //s
 
-
-    //Odometria
+    //Odometría
     vl = angular2linear(rpmL);
     vr = angular2linear(rpmR);
-
     phid = (vr - vl) / baseline;
     v = (vl + vr) / 2.0;
-
     phi += phid * (tmAct - tmAnt) / 1000.0;
     while (phi > 2 * pi) phi -= 2 * pi;
     while (phi < 0) phi += 2 * pi;
-
     vx = v * cos(phi);
     vy = v * sin(phi);
-
     posx += vx * (tmAct - tmAnt) / 1000.0;
     posy += vy * (tmAct - tmAnt) / 1000.0;
 
-    //Control
+    //Control (según el modo seleccionado)
     switch (modo) {
       case 0:   //Modo 0 - Parado
         vel1 = 0; vel2 = 0;
         break;
 
       case 1:   //Modo 1 - Avanzar paralelo a la pared
-        modo5();
-        break;
-      case 2:
-        modo6();
-        break;
-      case 3:
-        modo7();
+        modo_avanzado();
         break;
     }
     tmAnt = millis();
 
-    //Telemetría (Putty)
-    /*
-        if (vel2 < velUmbral && vel2 > -velUmbral)
-          vel2 = 0;
-
-        if (vel1 < velUmbral && vel1 > -velUmbral)
-          vel1 = 0;
-    */
-
+    //Enviamos los datos para telemetría
     tact = millis();
-    //telemetria(tact - tant, m2*rpmL, m1*rpmR, velRef, mode, vel2, vel1);
-    //telemetriaOD(tact - tant, posx, posy, vx, vy, wCont, vCont, vel2, vel1, phi);
     telemetriaObj(tact - tant, posx, posy, phi, distPunto);
     tant = millis();
     moveRobot(vel1, vel2);
   }
-
-  //delay(100);
 }

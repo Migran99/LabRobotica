@@ -1,9 +1,5 @@
-//float kp = -4.17540 * 1;
-//float kd = -0.93737 * 1;
-//float ki = -0.1 * 1;
 
-
-
+//Controlador Rueda 1
 float controlador1(float Rk, float Yk, float Tm)
 {
   float Umax = 255-velMinG, Umin = -Umax; /* Valores límite de la señal de control */
@@ -25,14 +21,9 @@ float controlador1(float Rk, float Yk, float Tm)
 
   e_k_1 = ek; //Actualizamos el error del instante anterior
   Int_k += ek * Tm;
-//  if (uk >= 5)
-//    Uk = Ueq + uk;
-//  else if (uk <= -5)
-//    Uk = -Ueq + uk;
-//  else
-//    Uk = 0;
 
   Uk=uk;
+  
   /* Saturación de la señal de control */
   if (Uk > Umax) Uks = Umax;
   else if (Uk < Umin) Uks = Umin;
@@ -44,7 +35,7 @@ float controlador1(float Rk, float Yk, float Tm)
   return Uks;
 }
 
-
+//Controlador Rueda 2
 float controlador2(float Rk, float Yk, float Tm)
 {
   float Umax = 255-velMinG, Umin = -Umax; /* Valores límite de la señal de control */
@@ -65,13 +56,6 @@ float controlador2(float Rk, float Yk, float Tm)
 
   e_k_1 = ek; //Actualizamos el error del instante anterior
   Int_k += ek * Tm;
-  
-//  if (uk >= 5)
-//    Uk = Ueq + uk;
-//  else if (uk <= -5)
-//    Uk = -Ueq + uk;
-//  else
-//    Uk = 0;
 
   Uk=uk;
   /* Saturación de la señal de control */
@@ -106,12 +90,6 @@ float controlador3(float Rk, float Yk, float Tm)
 
   e_k_1 = ek; //Actualizamos el error del instante anterior
   Int_k += ek * Tm;
-//  if (uk >= 5)
-//    Uk = Ueq + uk;
-//  else if (uk <= -5)
-//    Uk = -Ueq + uk;
-//  else
-//    Uk = 0;
 
   Uk=uk;
   /* Saturación de la señal de control */
@@ -146,12 +124,6 @@ float controlador4(float Rk, float Yk, float Tm)
 
   e_k_1 = ek; //Actualizamos el error del instante anterior
   Int_k += ek * Tm;
-//  if (uk >= 5)
-//    Uk = Ueq + uk;
-//  else if (uk <= -5)
-//    Uk = -Ueq + uk;
-//  else
-//    Uk = 0;
 
   Uk=uk;
   /* Saturación de la señal de control */

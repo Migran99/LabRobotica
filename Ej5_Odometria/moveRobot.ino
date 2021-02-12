@@ -19,7 +19,6 @@ void moveRobot(int vel1, int vel2) {
   else {
     digitalWrite(IN1, LOW);
     digitalWrite(IN2, LOW);
-    m1 = 0;
   }
 
   if (vel2 < -velMin) {
@@ -35,10 +34,8 @@ void moveRobot(int vel1, int vel2) {
   else {
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, LOW);
-    m2 = 0;
   }
-
-// CAMBIO MODO TELEMETRIA
+  
   if(m1 * m2 == 1){
     if(m1 > 1) mode = 1;
     else mode = 2;  

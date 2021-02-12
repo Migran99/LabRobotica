@@ -8,13 +8,14 @@ float ping(int TrgPin, int EchoPin) {
   delayMicroseconds(10);
   digitalWrite(TrgPin, LOW);
 
-  duration = pulseIn(EchoPin, HIGH, (unsigned long) 12000); //Timeout de 20 ms = 20000 micro segundos
+  duration = pulseIn(EchoPin, HIGH, (unsigned long) 12000); //Timeout de 12 ms
 
   distanceCm = (float)duration * 10.0 / 292.0 / 2.0;  //convertimos a distancia en cm
   return distanceCm;
 }
 
-int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filtro para el ultrasonido. Devuelve 1 si medida valida, 0 si no.
+//Filtro para el ultrasonido. Devuelve 1 si medida valida, 0 si no (En estos modos no lo usamos)
+int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ 
   int res;
   if(abs(pingAct - *distAnt) <= maxDiff){
       *distAct = pingAct;
@@ -28,6 +29,7 @@ int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filt
   return res;
 }
 
+//Encoder - Calculo de rpm de cada rueda
 void medirVelocidad()
 {
   unsigned long interv;
@@ -40,8 +42,5 @@ void medirVelocidad()
 
   timeEncAnt = micros();
   LenconderCnt = 0;
-  RenconderCnt = 0;
-
-  //Serial.println(rpmL);
-  
+  RenconderCnt = 0;  
 }
