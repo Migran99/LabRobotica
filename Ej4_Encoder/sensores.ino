@@ -28,6 +28,7 @@ int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filt
   return res;
 }
 
+//Función para medir la velocidad de los ecoders
 void medirVelocidad()
 {
   unsigned long interv;
@@ -35,6 +36,8 @@ void medirVelocidad()
   timeEncAct = micros();
   interv=timeEncAct-timeEncAnt;
 
+  //EN funcion del numero de interrupciones, realizamos una converssion a rpm
+  // sabiendo que hay 4 pares de polos
   rpmL = (double)(LenconderCnt*pow(10,6)*60.0)/(interv*4.0*rtL);
   rpmR = (double)(RenconderCnt*pow(10,6)*60.0)/(interv*4.0*rtR); 
 

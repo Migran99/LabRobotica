@@ -38,33 +38,30 @@ int nMed;
 int velUmbral = 90;
 int velMinG = 85;
 
-// Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
-void modo1() {
+// Modo 3, un solo conrolador para hacer las dos distancias iguales
+void modo3() {
   PERIODO_MUESTREO_MS = 50;
-  vel1 = 130; //110
+  vel1 = 130; //Velocidad de la rueda derecha fija
 
   int col1, col2;
-  int velMin1 = velMinG;
-  int velMin2 = velMinG;
-  //col1 = round(controlador1(distStop, dist1, tm));
-  //col2 = round(controlador2(dist2, dist1, tm));
+
+  //Solo variamos la velocidad izquierda
   col2 = round(controlador2(0, dist1-dist2, tm));
   vel2 = col2 + vel1;
 }
 
-// Modo 2 con PID para cada uno de los motores -  Suponemos que estan desacoplados y funciona bastanta bien.
-void modo2() { 
+//Modo 4 - Controladores en cascada para tener la inclinación deseada con respecto a la pared
+void modo4() { 
   float distMedia = (dist1+dist2)/2;
   PERIODO_MUESTREO_MS = 50;
-  vel1 = 130;
+  vel1 = 130; // Velocidad derecha fija de nuevo
 
   int col1, col2;
-  int velMin1 = velMinG;
-  int velMin2 = velMinG;
-  col1 = controlador1(distStop, distMedia, tm);
-  col2 = round(controlador2(col1, dist1-dist2, tm));
+  col1 = controlador1(distStop, distMedia, tm); //Primer controlador que calcula la vel
+                                                // relativa de las ruedas para una inclinacion
+                                                
+  col2 = round(controlador2(col1, dist1-dist2, tm));//Ajusta a esa velocidad
   vel2 = col2 + vel1;
-  //vel2 = 130;
 }
 
 void setup() {
@@ -131,11 +128,11 @@ void loop() {
         break;
 
       case 1:   //Modo 1 - Avanzar paralelo a la pared
-        modo1();
+        modo3();
         break;
 
       case 2:
-        modo2(); //Modo 2 - Avanzar paralelo a la pared a distancia dada
+        modo4(); //Modo 2 - Avanzar paralelo a la pared a distancia dada
         break;
     }
 

@@ -1,3 +1,4 @@
+// Medida de un sensor ultrasonido
 float ping(int TrgPin, int EchoPin) {
   long duration;
   float distanceCm;
@@ -14,8 +15,11 @@ float ping(int TrgPin, int EchoPin) {
   return distanceCm;
 }
 
+
+//Filtrado para medidas ultrasonido
 int filtro(float* distAnt, float* distAct, float pingAct, float maxDiff){ //Filtro para el ultrasonido. Devuelve 1 si medida valida, 0 si no.
   int res;
+  //Si la nueva medida es muy dispar, se descarta
   if(abs(pingAct - *distAnt) <= maxDiff){
       *distAct = pingAct;
       res = 1;

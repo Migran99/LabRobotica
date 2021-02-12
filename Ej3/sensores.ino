@@ -1,3 +1,4 @@
+//Mismo que en el ejercicio anterior
 float ping(int TrgPin, int EchoPin) {
   long duration;
   float distanceCm;

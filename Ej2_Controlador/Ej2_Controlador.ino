@@ -22,7 +22,7 @@ int modo = 0;
 //Variables de funcionamiento
 bool puttyReady = false;
 int tact, tant; //Tiempo entre ciclos
-float distStop;
+float distStop; //Distancia de parado
 float dist1, old_dist1;
 float dist2, old_dist2;
 int vel1 = 0, vel2 = 0;
@@ -31,7 +31,7 @@ float tm;
 float maxDistDif = 0.5; //Threshold para parar el vehiculo en el modo 1 - Histeresis
 float ping1, ping2;
 float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
-int mode = 0;
+int mode = 0; //modo giro ruedas, para telemetria
 
 float dist1Sum, dist2Sum;
 int nMed;
@@ -62,6 +62,7 @@ void modo2() {
   col2 = round(controlador2(distStop, dist2, tm));
   Serial.println("Col1->" + String(col1) + "Col2->" + String(col2) + "tm->" + String(tm));
 
+  // Para evitar la zona de arranque
   if (col1 >= 0)
     vel1 = col1 + velMin1;
   else
@@ -71,22 +72,6 @@ void modo2() {
     vel2 = col2 + velMin2;
   else
     vel2 = col2 - velMin2;
-
-  // Version antigua
-  /*
-    float distDiff = dist1 - dist2;
-    vel1 = 100;
-    vel2 = 100;
-    if (abs(dist1 - distStop) < maxDistDif || abs(dist2 - distStop) < maxDistDif) {
-    if (distDiff > 2*maxDistDif)  mode = 3;
-    else if (distDiff < -2*maxDistDif) mode = 4;
-    else mode = 0;
-    }
-    else if (dist1 > distStop || dist2 > distStop) mode = 1;
-    else if (dist1 < distStop || dist2 < distStop) mode = 2;
-
-    Serial.println("\nMODE 2: Robot Mode-> " + String(mode) +"\t dist1: "+ String(dist1) + "  ;  dist2: " + String(dist2) + "  ;  distDiff:  " + String(distDiff));
-  */
 }
 
 void setup() {

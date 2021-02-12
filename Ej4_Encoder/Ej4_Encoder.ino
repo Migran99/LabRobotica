@@ -44,20 +44,23 @@ float maxDistDif = 0.5; //Threshold para parar el vehiculo en el modo 1 - Hister
 float ping1, ping2;
 float measureDiff = 0.2; //Maxima diferencia entre medidas para el filtro (malfuncionamiento sensor)
 int mode = 0;
-double velRef;
+
+double velRef; //Velocidad de referencia
 
 float dist1Sum, dist2Sum;
 int nMed;
 int velUmbral = 90;
 int velMinG = 80;
 
-// Modo 1 mucho mas sencillo sin controlador PID -  Solo control todo - nada
+// Modo 5 y 6
 void modo5() {
   PERIODO_MUESTREO_MS = 50;
 
   int col1, col2;
   int velMin1 = velMinG;
   int velMin2 = velMinG;
+
+  //Controlamos para que ambas ruedas vayan a la velocidad de referencia
   col1 = round(controlador1(velRef, m1*rpmR, tm));
   col2 = round(controlador2(velRef, m2*rpmL, tm));
 
@@ -71,6 +74,7 @@ void modo5() {
     vel2 = col2 - velMin2;
 }
 
+/* Funciones de interrupciones para los encoder  */
 void ISRLeft() {
   LenconderCnt++;
 }
@@ -80,6 +84,7 @@ void ISRRight() {
 }
 
 void setup() {
+  //Declaramos los ecoders como entradas con pullup
   pinMode(ENCL, INPUT_PULLUP);
   pinMode(ENCR, INPUT_PULLUP);
 
@@ -101,6 +106,7 @@ void setup() {
 
   velRef = 0;
 
+  //Asociamos la interrupción con un flanco de subida en la medida de los encoder
   LenconderCnt = RenconderCnt = 0;
   attachInterrupt(digitalPinToInterrupt(ENCR), ISRRight, RISING);
   attachInterrupt(digitalPinToInterrupt(ENCL), ISRLeft, RISING);
@@ -109,7 +115,7 @@ void setup() {
 
 void loop() {
 
-  //Hay mas de 2 Bytes listos para ser leidos - Usamos comandos de 3 parametros para configurarlo
+  //Hay mas de 3 Bytes listos para ser leidos - Usamos comandos de 4 parametros para configurarlo
   if (Serial2.available() > 3)
     BTread(&modo, &velRef);
 
@@ -117,6 +123,7 @@ void loop() {
   if ((tmAct - tmAnt) >= PERIODO_MUESTREO_MS) {
     //Lectura encoders
     medirVelocidad();
+    
     tm = (tmAct - tmAnt) / 1000.0; //Se pasa a segundos
 
     switch (modo) {
@@ -124,7 +131,7 @@ void loop() {
         vel1 = 0; vel2 = 0;
         break;
 
-      case 1:   //Modo 1 - Avanzar paralelo a la pared
+      case 1:   //Modo 5 - Control de velocidad
         modo5();
         break;
     }
@@ -145,5 +152,4 @@ void loop() {
     tmAnt = millis();
   }
 
-  //delay(100);
 }

@@ -1,3 +1,4 @@
+//Mismo que en ejercicio anterior
 void moveRobot(int vel1, int vel2) {
   int velMin = velUmbral;
   int m1, m2;

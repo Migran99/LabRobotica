@@ -5,6 +5,7 @@ void moveRobot(int vel1, int vel2) {
   analogWrite(ENB, abs(vel2));
 
 //CONTROL DIRECCION
+//m1 y m2 indican la dirección de giro de las ruedas
   if (vel1 < -velMin) {
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);

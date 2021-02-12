@@ -1,4 +1,4 @@
-
+//Igual que en modos anteriores
 void moveRobot(int vel1, int vel2) {
   int velMin = velUmbral;
   

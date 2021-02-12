@@ -1,6 +1,6 @@
 void BTread(int* modoFuncionamiento, double* velRef) {
-  //Esta función se ejecutará cuando haya 3 bytes listos para leer
-  // X00 -> X indica el modo; y 00 la distancia
+  //Esta función se ejecutará cuando haya 4 bytes listos para leer
+  // X000 -> X indica el modo; y 000 la velocidad de referencia
   int SerialIn = 0;
   int dataIn;
   int mod;
@@ -29,12 +29,12 @@ void BTread(int* modoFuncionamiento, double* velRef) {
       *modoFuncionamiento = 0; 
       Serial.println("Mode changed to --> MODE0 (Inactive)"); //Debug
       break;
-    case '1':
+    case '1': //Velocidad de refencia positiva
       *modoFuncionamiento = 1; 
       *velRef = (double)SerialIn;
       Serial.println("Mode changed to --> MODE1 \t with max Dist: " + String(*velRef)); //Debug
       break;
-    case '2':
+    case '2': //Velocidad de referencia negativa
       *modoFuncionamiento = 1; 
       *velRef = -(double)SerialIn;
       Serial.println("Mode changed to --> MODE2 \t with max Dist: " + String(*velRef)); //Debug
